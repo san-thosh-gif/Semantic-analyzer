@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semantic Analyser - Simulation</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            color: #fff;
+        }
+        header {
+            background: linear-gradient(90deg, #1a1a2e, #16213e);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid #e94560;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        header h1 {
+            font-size: 28px;
+            color: #e94560;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        header .subtitle {
+            font-size: 14px;
+            color: #a5a5a5;
+        }
+        .student-info {
+            text-align: right;
+            font-size: 14px;
+            color: #ccc;
+        }
+        .student-info span {
+            color: #e94560;
+            font-weight: bold;
+        }
+        nav {
+            background: #16213e;
+            padding: 12px 40px;
+            display: flex;
+            gap: 20px;
+            border-bottom: 1px solid #333;
+        }
+        nav a {
+            color: #e94560;
+            text-decoration: none;
+            font-size: 15px;
+            padding: 8px 20px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+        nav a:hover, nav a.active {
+            background: #e94560;
+            color: #fff;
+            border-color: #e94560;
+        }
+        .container {
+            max-width: 1300px;
+            margin: 30px auto;
+            padding: 0 40px;
+        }
+        .sim-title {
+            text-align: center;
+            font-size: 36px;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #e94560, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .sim-desc {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        /* Tabs */
+        .tab-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        .tab-btn {
+            padding: 10px 25px;
+            border: 1px solid #444;
+            background: #1a1a2e;
+            color: #aaa;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .tab-btn.active {
+            background: #e94560;
+            color: #fff;
+            border-color: #e94560;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .editor-section {
+            display: flex;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        .editor-panel, .output-panel {
+            flex: 1;
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .panel-header {
+            background: #16213e;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #e94560;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .panel-header .badge {
+            background: #e94560;
+            color: #fff;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        textarea {
+            width: 100%;
+            height: 320px;
+            background: #0f0f1a;
+            color: #00ff88;
+            border: none;
+            padding: 20px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+        }
+        textarea::placeholder { color: #555; }
+        .output-content {
+            overflow-y: auto;
+            padding: 15px 20px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+        }
+        .output-content::-webkit-scrollbar { width: 8px; }
+        .output-content::-webkit-scrollbar-thumb { background: #e94560; border-radius: 4px; }
+        .output-content::-webkit-scrollbar-track { background: #0f0f1a; }
+
+        .btn-row {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .btn {
+            padding: 14px 35px;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .btn-run {
+            background: linear-gradient(90deg, #e94560, #c0392b);
+            color: #fff;
+            box-shadow: 0 5px 20px rgba(233, 69, 96, 0.4);
+        }
+        .btn-run:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(233, 69, 96, 0.6); }
+        .btn-clear {
+            background: linear-gradient(90deg, #333, #555);
+            color: #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .btn-clear:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.5); }
+        .btn-sample {
+            background: linear-gradient(90deg, #1abc9c, #16a085);
+            color: #fff;
+            box-shadow: 0 5px 15px rgba(26,188,156,0.3);
+        }
+        .btn-sample:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(26,188,156,0.5); }
+
+        /* Stats bar */
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+        .stat-item {
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 15px 25px;
+            text-align: center;
+            min-width: 140px;
+        }
+        .stat-item .stat-num {
+            font-size: 28px;
+            font-weight: bold;
+            color: #e94560;
+        }
+        .stat-item .stat-label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        /* Tables */
+        .sem-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .sem-table th, .sem-table td {
+            border: 1px solid #333;
+            padding: 8px 14px;
+            text-align: center;
+            font-size: 13px;
+        }
+        .sem-table th {
+            background: #e94560;
+            color: #fff;
+            font-size: 14px;
+        }
+        .sem-table tr:nth-child(even) { background: #16213e; }
+        .sem-table tr:hover { background: rgba(233,69,96,0.12); }
+        .sem-table td { color: #ccc; }
+
+        /* Log row styling */
+        .log-row {
+            display: flex;
+            padding: 6px 0;
+            border-bottom: 1px solid #222;
+            align-items: center;
+            gap: 10px;
+        }
+        .log-row:hover { background: rgba(233, 69, 96, 0.08); }
+        .log-line { color: #666; width: 50px; font-size: 12px; }
+        .log-badge {
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            width: 90px;
+            text-align: center;
+        }
+        .log-msg { color: #eee; font-size: 13px; flex: 1; }
+        .badge-error   { background: #e74c3c; color: #fff; }
+        .badge-warning { background: #f39c12; color: #fff; }
+        .badge-ok      { background: #2ecc71; color: #fff; }
+        .badge-info    { background: #3498db; color: #fff; }
+        .badge-coerce  { background: #9b59b6; color: #fff; }
+
+        .status-pass {
+            background: #2ecc71; color: #fff; padding: 4px 14px;
+            border-radius: 6px; font-weight: bold; font-size: 14px;
+        }
+        .status-fail {
+            background: #e74c3c; color: #fff; padding: 4px 14px;
+            border-radius: 6px; font-weight: bold; font-size: 14px;
+        }
+        .status-warn {
+            background: #f39c12; color: #fff; padding: 4px 14px;
+            border-radius: 6px; font-weight: bold; font-size: 14px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            background: #1a1a2e;
+            border-top: 2px solid #e94560;
+            color: #777;
+            font-size: 14px;
+            margin-top: 40px;
+        }
+        footer span { color: #e94560; }
+
+        @media (max-width: 768px) {
+            .editor-section { flex-direction: column; }
+            .btn-row { flex-direction: column; align-items: center; }
+            .stats-bar { gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div>
+            <h1>Semantic Analyser</h1>
+            <div class="subtitle">Compiler Design - Virtual Lab | Simulation</div>
+        </div>
+        <div class="student-info">
+            <div>Created by: <span>Santhosh R K</span></div>
+            <div>Register No: <span>RA2311003050411</span></div>
+        </div>
+    </header>
+
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="simulation.html" class="active">Simulation</a>
+    </nav>
+
+    <div class="container">
+        <h2 class="sim-title">Semantic Analyser Simulation</h2>
+        <p class="sim-desc">Enter C-like declarations and assignments below — the analyser will check types, scopes, and declarations</p>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item"><div class="stat-num" id="statVars">0</div><div class="stat-label">Variables</div></div>
+            <div class="stat-item"><div class="stat-num" id="statLines">0</div><div class="stat-label">Statements</div></div>
+            <div class="stat-item"><div class="stat-num" id="statErrors">0</div><div class="stat-label">Errors</div></div>
+            <div class="stat-item"><div class="stat-num" id="statWarnings">0</div><div class="stat-label">Warnings</div></div>
+            <div class="stat-item"><div class="stat-num" id="statCoercions">0</div><div class="stat-label">Coercions</div></div>
+            <div class="stat-item"><div id="statResult" class="stat-num" style="font-size:16px;">—</div><div class="stat-label">Result</div></div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tab-row">
+            <div class="tab-btn active" onclick="switchTab('tabEditor', this)">📝 Editor</div>
+            <div class="tab-btn" onclick="switchTab('tabSymbol', this)">📋 Symbol Table</div>
+            <div class="tab-btn" onclick="switchTab('tabLog', this)">📊 Analysis Log</div>
+            <div class="tab-btn" onclick="switchTab('tabTypeCheck', this)">🔍 Type Checks</div>
+        </div>
+
+        <!-- Tab 1: Editor -->
+        <div class="tab-content active" id="tabEditor">
+            <div class="editor-section">
+                <div class="editor-panel">
+                    <div class="panel-header">
+                        <span>📝 Source Code</span>
+                        <span class="badge">INPUT</span>
+                    </div>
+                    <textarea id="sourceCode" placeholder="// Enter C-like code with declarations and assignments
+// Supported types: int, float, char, double
+
+int a = 10;
+float b = 3.14;
+char c = &quot;hello&quot;;
+a = a + b;
+d = a + 1;
+int a = 20;"></textarea>
+                </div>
+                <div class="output-panel">
+                    <div class="panel-header">
+                        <span>✅ Semantic Analysis Result</span>
+                        <span class="badge" id="resultBadge">OUTPUT</span>
+                    </div>
+                    <div class="output-content" id="resultOutput" style="height:320px;">
+                        <p style="color: #555; text-align: center; margin-top: 120px;">
+                            Click <strong style="color:#e94560;">"Analyse"</strong> to perform semantic analysis
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Symbol Table -->
+        <div class="tab-content" id="tabSymbol">
+            <div class="output-panel">
+                <div class="panel-header">
+                    <span>📋 Symbol Table</span>
+                    <span class="badge" id="symBadge">SYMBOL TABLE</span>
+                </div>
+                <div class="output-content" id="symbolOutput" style="height:400px;">
+                    <p style="color: #555; text-align: center; margin-top: 160px;">
+                        Analyse the code to build the Symbol Table
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Analysis Log -->
+        <div class="tab-content" id="tabLog">
+            <div class="output-panel">
+                <div class="panel-header">
+                    <span>📊 Step-by-Step Analysis Log</span>
+                    <span class="badge" id="logBadge">LOG</span>
+                </div>
+                <div class="output-content" id="logOutput" style="height:400px;">
+                    <p style="color: #555; text-align: center; margin-top: 160px;">
+                        Analyse the code to see line-by-line semantic checks
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 4: Type Checks -->
+        <div class="tab-content" id="tabTypeCheck">
+            <div class="output-panel">
+                <div class="panel-header">
+                    <span>🔍 Type Checking Details</span>
+                    <span class="badge" id="typeBadge">TYPE CHECKS</span>
+                </div>
+                <div class="output-content" id="typeOutput" style="height:400px;">
+                    <p style="color: #555; text-align: center; margin-top: 160px;">
+                        Analyse the code to see type compatibility results
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="btn-row">
+            <button class="btn btn-sample" onclick="loadSample()">📄 Load Sample</button>
+            <button class="btn btn-run" onclick="analyse()">▶ Analyse</button>
+            <button class="btn btn-clear" onclick="clearAll()">🗑 Clear</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>Semantic Analyser Virtual Lab | Created by <span>Santhosh R K</span> | Reg No: <span>RA2311003050411</span></p>
+        <p>&copy; 2025 Compiler Design Lab</p>
+    </footer>
+
+    <script>
+    // ==================== TAB MANAGEMENT ====================
+    function switchTab(tabId, el) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        el.classList.add('active');
+    }
+
+    // ==================== TYPE SYSTEM ====================
+    const TYPE_HIERARCHY = { 'char': 0, 'int': 1, 'float': 2, 'double': 3 };
+    const VALID_TYPES = ['int', 'float', 'char', 'double', 'void'];
+    const NUMERIC_TYPES = ['int', 'float', 'double'];
+
+    function isNumericType(t) { return NUMERIC_TYPES.includes(t); }
+
+    function canCoerce(from, to) {
+        if (from === to) return 'exact';
+        if (isNumericType(from) && isNumericType(to)) {
+            if (TYPE_HIERARCHY[from] < TYPE_HIERARCHY[to]) return 'widening';
+            if (TYPE_HIERARCHY[from] > TYPE_HIERARCHY[to]) return 'narrowing';
+        }
+        return 'incompatible';
+    }
+
+    function resultType(t1, t2) {
+        if (t1 === t2) return t1;
+        if (isNumericType(t1) && isNumericType(t2)) {
+            return TYPE_HIERARCHY[t1] >= TYPE_HIERARCHY[t2] ? t1 : t2;
+        }
+        return null; // incompatible
+    }
+
+    // ==================== EXPRESSION TYPE RESOLVER ====================
+    function resolveExprType(expr, symbolTable, logs, lineNum) {
+        expr = expr.trim();
+
+        // String literal
+        if (/^".*"$/.test(expr)) return 'char';
+
+        // Number literal
+        if (/^\d+\.\d+$/.test(expr)) return 'float';
+        if (/^\d+$/.test(expr)) return 'int';
+
+        // Parenthesized expression
+        if (expr.startsWith('(') && expr.endsWith(')')) {
+            return resolveExprType(expr.slice(1, -1), symbolTable, logs, lineNum);
+        }
+
+        // Binary expression: find the last + or - not inside parens, then * /
+        let parenDepth = 0;
+        let lastPlusMinusIdx = -1;
+        let lastMulDivIdx = -1;
+        for (let i = expr.length - 1; i >= 0; i--) {
+            if (expr[i] === ')') parenDepth++;
+            if (expr[i] === '(') parenDepth--;
+            if (parenDepth === 0) {
+                if ((expr[i] === '+' || expr[i] === '-') && i > 0 && lastPlusMinusIdx === -1) lastPlusMinusIdx = i;
+                if ((expr[i] === '*' || expr[i] === '/') && i > 0 && lastMulDivIdx === -1) lastMulDivIdx = i;
+            }
+        }
+
+        let splitIdx = lastPlusMinusIdx !== -1 ? lastPlusMinusIdx : lastMulDivIdx;
+        if (splitIdx > 0) {
+            const left = expr.substring(0, splitIdx).trim();
+            const op = expr[splitIdx];
+            const right = expr.substring(splitIdx + 1).trim();
+            const leftType = resolveExprType(left, symbolTable, logs, lineNum);
+            const rightType = resolveExprType(right, symbolTable, logs, lineNum);
+
+            if (!leftType || !rightType) return null;
+
+            const res = resultType(leftType, rightType);
+            if (!res) {
+                logs.push({ line: lineNum, type: 'error', msg: `Type mismatch in expression: ${leftType} ${op} ${rightType}` });
+                return null;
+            }
+            if (leftType !== rightType) {
+                const coerced = TYPE_HIERARCHY[leftType] < TYPE_HIERARCHY[rightType] ? leftType : rightType;
+                const target = res;
+                logs.push({ line: lineNum, type: 'coerce', msg: `Implicit coercion: ${coerced} → ${target} in "${left} ${op} ${right}"` });
+            }
+            return res;
+        }
+
+        // Single identifier
+        const id = expr.trim();
+        if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(id)) {
+            if (symbolTable[id]) {
+                return symbolTable[id].type;
+            } else {
+                logs.push({ line: lineNum, type: 'error', msg: `Undeclared variable "${id}" used in expression` });
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    // ==================== MAIN SEMANTIC ANALYSER ====================
+    function analyse() {
+        const source = document.getElementById('sourceCode').value;
+        if (!source.trim()) {
+            document.getElementById('resultOutput').innerHTML = '<p style="color:#e94560; text-align:center; margin-top:120px;">���️ Please enter some source code first!</p>';
+            return;
+        }
+
+        const lines = source.split('\n');
+        const symbolTable = {};
+        const logs = [];
+        const typeChecks = [];
+        let errorCount = 0;
+        let warningCount = 0;
+        let coercionCount = 0;
+        let stmtCount = 0;
+
+        lines.forEach((rawLine, idx) => {
+            const lineNum = idx + 1;
+            const line = rawLine.trim();
+
+            // Skip empty lines and comments
+            if (!line || line.startsWith('//')) return;
+            stmtCount++;
+
+            // Remove trailing semicolons
+            const stmt = line.replace(/;$/, '').trim();
+
+            // Pattern 1: Declaration with init — type name = value;
+            const declInitMatch = stmt.match(/^(int|float|char|double)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(.+)$/);
+            // Pattern 2: Declaration only — type name;
+            const declOnlyMatch = stmt.match(/^(int|float|char|double)\s+([a-zA-Z_][a-zA-Z0-9_]*)$/);
+            // Pattern 3: Assignment — name = expr;
+            const assignMatch = stmt.match(/^([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(.+)$/);
+
+            if (declInitMatch) {
+                const type = declInitMatch[1];
+                const name = declInitMatch[2];
+                const valueExpr = declInitMatch[3].trim();
+
+                // Check duplicate declaration
+                if (symbolTable[name]) {
+                    logs.push({ line: lineNum, type: 'error', msg: `Duplicate declaration: "${name}" was already declared at line ${symbolTable[name].line}` });
+                    errorCount++;
+                    typeChecks.push({ line: lineNum, stmt: line, check: `Duplicate "${name}"`, result: '❌ Error' });
+                    return;
+                }
+
+                // Resolve RHS type
+                const rhsType = resolveExprType(valueExpr, symbolTable, logs, lineNum);
+
+                // Add to symbol table
+                symbolTable[name] = { type: type, line: lineNum, value: valueExpr, scope: 'global' };
+                logs.push({ line: lineNum, type: 'info', msg: `Declared "${name}" as ${type} (value: ${valueExpr})` });
+
+                if (rhsType) {
+                    const coercion = canCoerce(rhsType, type);
+                    if (coercion === 'exact') {
+                        logs.push({ line: lineNum, type: 'ok', msg: `Type check passed: ${type} ${name} = ${rhsType} ✅` });
+                        typeChecks.push({ line: lineNum, stmt: line, check: `${type} = ${rhsType}`, result: '✅ OK' });
+                    } else if (coercion === 'widening') {
+                        logs.push({ line: lineNum, type: 'coerce', msg: `Implicit widening: ${rhsType} → ${type} for "${name}"` });
+                        typeChecks.push({ line: lineNum, stmt: line, check: `${rhsType} → ${type}`, result: '✅ Coerced' });
+                        coercionCount++;
+                    } else if (coercion === 'narrowing') {
+                        logs.push({ line: lineNum, type: 'warning', msg: `Narrowing conversion: ${rhsType} → ${type} for "${name}" (possible data loss)` });
+                        typeChecks.push({ line: lineNum, stmt: line, check: `${rhsType} → ${type}`, result: '⚠️ Narrowing' });
+                        warningCount++;
+                    } else {
+                        logs.push({ line: lineNum, type: 'error', msg: `Type mismatch: cannot assign ${rhsType} to ${type} "${name}"` });
+                        typeChecks.push({ line: lineNum, stmt: line, check: `${rhsType} → ${type}`, result: '❌ Mismatch' });
+                        errorCount++;
+                    }
+                } else {
+                    if (!logs.some(l => l.line === lineNum && l.type === 'error')) {
+                        typeChecks.push({ line: lineNum, stmt: line, check: `${type} = ???`, result: '❌ Unresolved' });
+                        errorCount++;
+                    } else {
+                        typeChecks.push({ line: lineNum, stmt: line, check: `—`, result: '❌ Error' });
+                    }
+                }
+
+            } else if (declOnlyMatch) {
+                const type = declOnlyMatch[1];
+                const name = declOnlyMatch[2];
+
+                if (symbolTable[name]) {
+                    logs.push({ line: lineNum, type: 'error', msg: `Duplicate declaration: "${name}" was already declared at line ${symbolTable[name].line}` });
+                    typeChecks.push({ line: lineNum, stmt: line, check: `Duplicate "${name}"`, result: '❌ Error' });
+                    errorCount++;
+                    return;
+                }
+
+                symbolTable[name] = { type: type, line: lineNum, value: 'undefined', scope: 'global' };
+                logs.push({ line: lineNum, type: 'info', msg: `Declared "${name}" as ${type} (no initialization)` });
+                logs.push({ line: lineNum, type: 'ok', msg: `Declaration valid ✅` });
+                typeChecks.push({ line: lineNum, stmt: line, check: `Declare ${type}`, result: '✅ OK' });
+
+            } else if (assignMatch) {
+                const name = assignMatch[1];
+                const valueExpr = assignMatch[2].trim();
+
+                // Check if declared
+                if (!symbolTable[name]) {
+                    logs.push({ line: lineNum, type: 'error', msg: `Undeclared variable "${name}" — must be declared before assignment` });
+                    typeChecks.push({ line: lineNum, stmt: line, check: `"${name}" not declared`, result: '❌ Error' });
+                    errorCount++;
+                    return;
+                }
+
+                const lhsType = symbolTable[name].type;
+                const rhsType = resolveExprType(valueExpr, symbolTable, logs, lineNum);
+
+                symbolTable[name].value = valueExpr;
+
+                if (rhsType) {
+                    const coercion = canCoerce(rhsType, lhsType);
+                    if (coercion === 'exact') {
+                        logs.push({ line: lineNum, type: 'ok', msg: `Assignment valid: ${name} (${lhsType}) = ${rhsType} ✅` });
+                        typeChecks.push({ line: lineNum, stmt: line, check: `${lhsType} = ${rhsType}`, result: '✅ OK' });
+                    } else if (coercion === 'widening') {
+                        logs.push({ line: lineNum, type: 'coerce', msg: `Implicit widening: ${rhsType} → ${lhsType} in assignment to "${name}"` });
+                        typeChecks.push({ line: lineNum, stmt: line, check: `${rhsType} → ${lhsType}`, result: '✅ Coerced' });
+                        coercionCount++;
+                    } else if (coercion === 'narrowing') {
+                        logs.push({ line: lineNum, type: 'warning', msg: `Narrowing: ${rhsType} → ${lhsType} in assignment to "${name}" (data loss possible)` });
+                        typeChecks.push({ line: lineNum, stmt: line, check: `${rhsType} → ${lhsType}`, result: '⚠️ Narrowing' });
+                        warningCount++;
+                    } else {
+                        logs.push({ line: lineNum, type: 'error', msg: `Type mismatch: cannot assign ${rhsType} to ${lhsType} "${name}"` });
+                        typeChecks.push({ line: lineNum, stmt: line, check: `${rhsType} → ${lhsType}`, result: '❌ Mismatch' });
+                        errorCount++;
+                    }
+                } else {
+                    if (!logs.some(l => l.line === lineNum && l.type === 'error')) {
+                        typeChecks.push({ line: lineNum, stmt: line, check: `—`, result: '❌ Unresolved' });
+                        errorCount++;
+                    } else {
+                        typeChecks.push({ line: lineNum, stmt: line, check: `—`, result: '❌ Error' });
+                    }
+                }
+
+            } else if (line !== '') {
+                logs.push({ line: lineNum, type: 'warning', msg: `Unrecognized statement: "${line}"` });
+                typeChecks.push({ line: lineNum, stmt: line, check: '—', result: '⚠️ Unknown' });
+                warningCount++;
+            }
+        });
+
+        // Count coercions from logs
+        coercionCount = logs.filter(l => l.type === 'coerce').length;
+
+        // ==================== RENDER RESULTS ====================
+
+        // 1. Result Output
+        let resultHtml = '';
+        if (errorCount === 0 && warningCount === 0) {
+            resultHtml += `<div style="margin-bottom:15px;"><span class="status-pass">✅ SEMANTIC ANALYSIS PASSED — No Errors</span></div>`;
+        } else if (errorCount === 0 && warningCount > 0) {
+            resultHtml += `<div style="margin-bottom:15px;"><span class="status-warn">⚠️ PASSED WITH ${warningCount} WARNING(S)</span></div>`;
+        } else {
+            resultHtml += `<div style="margin-bottom:15px;"><span class="status-fail">❌ SEMANTIC ANALYSIS FAILED — ${errorCount} Error(s)</span></div>`;
+        }
+
+        resultHtml += `<div style="color:#e94560;font-weight:bold;margin:15px 0 10px;">Summary:</div>`;
+        resultHtml += `<div style="color:#ccc;padding:3px 0;">📋 Statements Analysed: <strong style="color:#fff;">${stmtCount}</strong></div>`;
+        resultHtml += `<div style="color:#ccc;padding:3px 0;">📦 Variables Declared: <strong style="color:#fff;">${Object.keys(symbolTable).length}</strong></div>`;
+        resultHtml += `<div style="color:#2ecc71;padding:3px 0;">✅ Checks Passed: <strong>${logs.filter(l => l.type === 'ok').length}</strong></div>`;
+        resultHtml += `<div style="color:#9b59b6;padding:3px 0;">🔄 Type Coercions: <strong>${coercionCount}</strong></div>`;
+        resultHtml += `<div style="color:#f39c12;padding:3px 0;">⚠️ Warnings: <strong>${warningCount}</strong></div>`;
+        resultHtml += `<div style="color:#e74c3c;padding:3px 0;">❌ Errors: <strong>${errorCount}</strong></div>`;
+
+        // List all errors
+        const errors = logs.filter(l => l.type === 'error');
+        if (errors.length > 0) {
+            resultHtml += `<div style="color:#e94560;font-weight:bold;margin:20px 0 10px;">Errors Found:</div>`;
+            errors.forEach(e => {
+                resultHtml += `<div style="color:#e74c3c;padding:4px 0;">Line ${e.line}: ${esc(e.msg)}</div>`;
+            });
+        }
+
+        const warnings = logs.filter(l => l.type === 'warning');
+        if (warnings.length > 0) {
+            resultHtml += `<div style="color:#f39c12;font-weight:bold;margin:20px 0 10px;">Warnings:</div>`;
+            warnings.forEach(w => {
+                resultHtml += `<div style="color:#f39c12;padding:4px 0;">Line ${w.line}: ${esc(w.msg)}</div>`;
+            });
+        }
+
+        document.getElementById('resultOutput').innerHTML = resultHtml;
+        document.getElementById('resultBadge').textContent = errorCount === 0 ? 'PASS' : errorCount + ' ERRORS';
+
+        // 2. Symbol Table
+        let symHtml = '<table class="sem-table"><tr><th>#</th><th>Name</th><th>Type</th><th>Scope</th><th>Declared (Line)</th><th>Value</th></tr>';
+        let symIdx = 0;
+        for (const [name, info] of Object.entries(symbolTable)) {
+            symIdx++;
+            symHtml += `<tr>
+                <td>${symIdx}</td>
+                <td style="color:#3498db;font-weight:bold;">${esc(name)}</td>
+                <td style="color:#e94560;font-weight:bold;">${esc(info.type)}</td>
+                <td>${esc(info.scope)}</td>
+                <td>${info.line}</td>
+                <td style="color:#00ff88;">${esc(String(info.value))}</td>
+            </tr>`;
+        }
+        symHtml += '</table>';
+        if (symIdx === 0) symHtml = '<p style="color:#555;text-align:center;margin-top:160px;">No variables declared</p>';
+        document.getElementById('symbolOutput').innerHTML = symHtml;
+        document.getElementById('symBadge').textContent = symIdx + ' ENTRIES';
+
+        // 3. Analysis Log
+        let logHtml = '';
+        logs.forEach(l => {
+            const badgeClass = l.type === 'error' ? 'badge-error' :
+                               l.type === 'warning' ? 'badge-warning' :
+                               l.type === 'ok' ? 'badge-ok' :
+                               l.type === 'coerce' ? 'badge-coerce' : 'badge-info';
+            const label = l.type === 'error' ? 'ERROR' :
+                          l.type === 'warning' ? 'WARNING' :
+                          l.type === 'ok' ? 'PASS' :
+                          l.type === 'coerce' ? 'COERCE' : 'INFO';
+            logHtml += `<div class="log-row">
+                <span class="log-line">L${l.line}</span>
+                <span class="log-badge ${badgeClass}">${label}</span>
+                <span class="log-msg">${esc(l.msg)}</span>
+            </div>`;
+        });
+        if (!logHtml) logHtml = '<p style="color:#555;text-align:center;margin-top:160px;">No log entries</p>';
+        document.getElementById('logOutput').innerHTML = logHtml;
+        document.getElementById('logBadge').textContent = logs.length + ' ENTRIES';
+
+        // 4. Type Checks Table
+        let typeHtml = '<table class="sem-table"><tr><th>Line</th><th>Statement</th><th>Type Check</th><th>Result</th></tr>';
+        typeChecks.forEach(tc => {
+            const color = tc.result.includes('✅') ? '#2ecc71' :
+                          tc.result.includes('⚠️') ? '#f39c12' : '#e74c3c';
+            typeHtml += `<tr>
+                <td>${tc.line}</td>
+                <td style="color:#00ff88;text-align:left;font-family:'Courier New',monospace;">${esc(tc.stmt)}</td>
+                <td>${esc(tc.check)}</td>
+                <td style="color:${color};font-weight:bold;">${tc.result}</td>
+            </tr>`;
+        });
+        typeHtml += '</table>';
+        document.getElementById('typeOutput').innerHTML = typeHtml;
+        document.getElementById('typeBadge').textContent = typeChecks.length + ' CHECKS';
+
+        // Stats
+        document.getElementById('statVars').textContent = Object.keys(symbolTable).length;
+        document.getElementById('statLines').textContent = stmtCount;
+        document.getElementById('statErrors').textContent = errorCount;
+        document.getElementById('statWarnings').textContent = warningCount;
+        document.getElementById('statCoercions').textContent = coercionCount;
+        document.getElementById('statResult').innerHTML = errorCount === 0
+            ? (warningCount > 0 ? '<span class="status-warn">WARN</span>' : '<span class="status-pass">PASS</span>')
+            : '<span class="status-fail">FAIL</span>';
+    }
+
+    function esc(s) {
+        return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function clearAll() {
+        document.getElementById('sourceCode').value = '';
+        document.getElementById('resultOutput').innerHTML = '<p style="color:#555;text-align:center;margin-top:120px;">Click <strong style="color:#e94560;">"Analyse"</strong> to perform semantic analysis</p>';
+        document.getElementById('symbolOutput').innerHTML = '<p style="color:#555;text-align:center;margin-top:160px;">Analyse the code to build the Symbol Table</p>';
+        document.getElementById('logOutput').innerHTML = '<p style="color:#555;text-align:center;margin
